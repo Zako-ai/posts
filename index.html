@@ -245,6 +245,45 @@
             border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
 
+        /* Content view for SPA */
+        #content-view {
+            display: none;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        #content-view.active {
+            display: block;
+        }
+
+        #content-frame {
+            width: 100%;
+            height: 100vh;
+            border: none;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 10px 20px;
+            border-radius: 25px;
+            color: #00f5ff;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(-5px);
+        }
+
         /* Mobile responsive */
         @media (max-width: 768px) {
             .header h1 { font-size: 2.5em; }
@@ -256,27 +295,15 @@
 <body>
     <div class="bg-animation"></div>
     
-    <!-- Floating particles -->
-    <script>
-        for (let i = 0; i < 20; i++) {
-            const particle = document.createElement('div');
-            particle.className = 'particle';
-            particle.style.left = Math.random() * 100 + '%';
-            particle.style.width = particle.style.height = Math.random() * 10 + 5 + 'px';
-            particle.style.animationDelay = Math.random() * 20 + 's';
-            particle.style.animationDuration = 20 + Math.random() * 10 + 's';
-            document.body.appendChild(particle);
-        }
-    </script>
-
-    <div class="container">
+    <!-- Main content -->
+    <div id="main-content" class="container">
         <div class="header">
             <h1>Tech Posts Collection</h1>
             <p>Exploring the frontiers of AI, machine learning, and modern technology</p>
         </div>
 
         <div class="posts-grid">
-            <div class="post-card" onclick="window.location.href='./ai-roadmap-en/index.html'">
+            <div class="post-card" data-post="ai-roadmap-en">
                 <span class="lang-badge">EN</span>
                 <div class="post-icon">🚀</div>
                 <h2 class="post-title">AI Engineer Roadmap 2025</h2>
@@ -288,10 +315,10 @@
                     <span class="tag">Career</span>
                     <span class="tag">PyTorch</span>
                 </div>
-                <a href="./ai-roadmap-en/index.html" class="post-link">View Roadmap</a>
+                <a href="#" class="post-link" onclick="event.preventDefault()">View Roadmap</a>
             </div>
 
-            <div class="post-card" onclick="window.location.href='./ai-roadmap-uz/index.html'">
+            <div class="post-card" data-post="ai-roadmap-uz">
                 <span class="lang-badge">UZ</span>
                 <div class="post-icon">🎯</div>
                 <h2 class="post-title">AI Muhandisi Yo'l Xaritasi 2025</h2>
@@ -303,7 +330,7 @@
                     <span class="tag">Karyera</span>
                     <span class="tag">PyTorch</span>
                 </div>
-                <a href="./ai-roadmap-uz/index.html" class="post-link">Yo'l Xaritani Ko'rish</a>
+                <a href="#" class="post-link" onclick="event.preventDefault()">Yo'l Xaritani Ko'rish</a>
             </div>
         </div>
 
@@ -312,7 +339,26 @@
         </div>
     </div>
 
+    <!-- Content viewer -->
+    <div id="content-view">
+        <a href="#" class="back-button" onclick="hideContent(event)">
+            ← Back to Posts
+        </a>
+        <iframe id="content-frame"></iframe>
+    </div>
+
     <script>
+        // Floating particles
+        for (let i = 0; i < 20; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.width = particle.style.height = Math.random() * 10 + 5 + 'px';
+            particle.style.animationDelay = Math.random() * 20 + 's';
+            particle.style.animationDuration = 20 + Math.random() * 10 + 's';
+            document.body.appendChild(particle);
+        }
+
         // Mouse follow effect for cards
         document.querySelectorAll('.post-card').forEach(card => {
             card.addEventListener('mousemove', (e) => {
@@ -322,6 +368,64 @@
                 card.style.setProperty('--mouse-x', `${x}px`);
                 card.style.setProperty('--mouse-y', `${y}px`);
             });
+        });
+
+        // Post navigation
+        const posts = {
+            'ai-roadmap-en': './ai-roadmap-en/index.html',
+            'ai-roadmap-uz': './ai-roadmap-uz/index.html'
+        };
+
+        function showContent(postId) {
+            const mainContent = document.getElementById('main-content');
+            const contentView = document.getElementById('content-view');
+            const contentFrame = document.getElementById('content-frame');
+            
+            if (posts[postId]) {
+                mainContent.style.display = 'none';
+                contentView.classList.add('active');
+                contentFrame.src = posts[postId];
+                window.location.hash = postId;
+            }
+        }
+
+        function hideContent(event) {
+            event.preventDefault();
+            const mainContent = document.getElementById('main-content');
+            const contentView = document.getElementById('content-view');
+            const contentFrame = document.getElementById('content-frame');
+            
+            mainContent.style.display = 'block';
+            contentView.classList.remove('active');
+            contentFrame.src = '';
+            window.location.hash = '';
+        }
+
+        // Handle card clicks
+        document.querySelectorAll('.post-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const postId = card.getAttribute('data-post');
+                showContent(postId);
+            });
+        });
+
+        // Handle direct URL access with hash
+        window.addEventListener('load', () => {
+            const hash = window.location.hash.slice(1);
+            if (hash && posts[hash]) {
+                showContent(hash);
+            }
+        });
+
+        // Handle back button
+        window.addEventListener('popstate', () => {
+            const hash = window.location.hash.slice(1);
+            if (!hash) {
+                const mainContent = document.getElementById('main-content');
+                const contentView = document.getElementById('content-view');
+                mainContent.style.display = 'block';
+                contentView.classList.remove('active');
+            }
         });
     </script>
 </body>

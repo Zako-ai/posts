@@ -1,0 +1,2 @@
+# posts
+Zako-ai postlari
